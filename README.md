@@ -135,4 +135,4 @@ All image processing is performed client-side using the HTML5 Canvas API. Your i
 
 ## License
 
-MIT
+Apache 2.0 - See [LICENSE](LICENSE) for details.
