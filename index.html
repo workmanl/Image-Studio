@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Studio - Professional Photo Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loading-text">Processing...</p>
+        <div id="progress-bar" class="progress-bar hidden">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" class="error-message hidden"></div>
+
+    <!-- Upload Section -->
+    <section id="upload-section" class="upload-section">
+        <div class="upload-container">
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Upload image area">
+                <div class="drop-zone-content">
+                    <div class="upload-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <h2>Import Photo</h2>
+                    <p>Drag & drop an image here</p>
+                    <p class="or-text">or</p>
+                    <label for="file-input" class="upload-btn">Browse Files</label>
+                    <input type="file" id="file-input" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,.jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff" hidden>
+                    <p class="file-types">JPG, PNG, GIF, WebP, BMP, TIFF (max 50MB)</p>
+                </div>
+            </div>
+            <div class="privacy-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                </svg>
+                100% Private - All processing happens locally
+            </div>
+        </div>
+    </section>
+
+    <!-- Editor Section -->
+    <section id="editor-section" class="editor-section hidden">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button id="back-btn" class="icon-btn" title="Back to Library">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <span class="app-title">Image Studio</span>
+            </div>
+            <div class="top-bar-center">
+                <div class="toolbar-group">
+                    <button id="undo-btn" class="icon-btn" title="Undo (Ctrl+Z)" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7v6h6"/><path d="M3 13c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9c-2.12 0-4.07-.74-5.61-1.97"/>
+                        </svg>
+                    </button>
+                    <button id="redo-btn" class="icon-btn" title="Redo (Ctrl+Shift+Z)" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 7v6h-6"/><path d="M21 13c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.12 0 4.07-.74 5.61-1.97"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                    <button id="rotate-left-btn" class="icon-btn" title="Rotate Left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+                        </svg>
+                    </button>
+                    <button id="rotate-right-btn" class="icon-btn" title="Rotate Right">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+                        </svg>
+                    </button>
+                    <button id="flip-horizontal-btn" class="icon-btn" title="Flip Horizontal">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 20v2M12 14v2M12 8v2M12 2v2"/>
+                        </svg>
+                    </button>
+                    <button id="flip-vertical-btn" class="icon-btn" title="Flip Vertical">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M20 12h2M14 12h2M8 12h2M2 12h2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group zoom-group">
+                    <button id="zoom-out-btn" class="icon-btn" title="Zoom Out">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/>
+                        </svg>
+                    </button>
+                    <span id="zoom-level" class="zoom-level">100%</span>
+                    <button id="zoom-in-btn" class="icon-btn" title="Zoom In">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+                        </svg>
+                    </button>
+                    <button id="zoom-fit-btn" class="icon-btn" title="Fit to Screen">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button id="before-after-btn" class="icon-btn" title="Before/After (\\)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/>
+                    </svg>
+                </button>
+                <button id="export-btn" class="primary-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Editor Area -->
+        <div class="editor-main">
+            <!-- Left Panel - Presets -->
+            <aside class="left-panel">
+                <div class="panel-section">
+                    <h3 class="panel-title">Presets</h3>
+                    <div class="preset-list">
+                        <button class="preset-item" data-preset="instagram-square">
+                            <span class="preset-name">Instagram Square</span>
+                            <span class="preset-size">1080×1080</span>
+                        </button>
+                        <button class="preset-item" data-preset="instagram-portrait">
+                            <span class="preset-name">Instagram Portrait</span>
+                            <span class="preset-size">1080×1350</span>
+                        </button>
+                        <button class="preset-item" data-preset="instagram-story">
+                            <span class="preset-name">Story / Reels</span>
+                            <span class="preset-size">1080×1920</span>
+                        </button>
+                        <button class="preset-item" data-preset="youtube-thumbnail">
+                            <span class="preset-name">YouTube Thumb</span>
+                            <span class="preset-size">1280×720</span>
+                        </button>
+                        <button class="preset-item" data-preset="facebook-post">
+                            <span class="preset-name">Facebook Post</span>
+                            <span class="preset-size">1200×630</span>
+                        </button>
+                        <button class="preset-item" data-preset="twitter-post">
+                            <span class="preset-name">Twitter/X Post</span>
+                            <span class="preset-size">1600×900</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <h3 class="panel-title">Aspect Ratio</h3>
+                    <div class="ratio-grid">
+                        <button class="ratio-btn active" data-ratio="free">Free</button>
+                        <button class="ratio-btn" data-ratio="1:1">1:1</button>
+                        <button class="ratio-btn" data-ratio="4:5">4:5</button>
+                        <button class="ratio-btn" data-ratio="16:9">16:9</button>
+                        <button class="ratio-btn" data-ratio="9:16">9:16</button>
+                        <button class="ratio-btn" data-ratio="3:2">3:2</button>
+                        <button class="ratio-btn" data-ratio="2:3">2:3</button>
+                        <button class="ratio-btn" data-ratio="4:3">4:3</button>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <h3 class="panel-title">Info</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Dimensions</span>
+                            <span id="info-dimensions" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Export Size</span>
+                            <span id="info-export" class="info-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center - Canvas -->
+            <main class="canvas-area">
+                <div id="canvas-wrapper" class="canvas-wrapper">
+                    <canvas id="main-canvas"></canvas>
+                    <div id="crop-overlay" class="crop-overlay">
+                        <div id="crop-box" class="crop-box">
+                            <div class="crop-grid"></div>
+                            <div class="crop-handle nw" data-handle="nw"></div>
+                            <div class="crop-handle ne" data-handle="ne"></div>
+                            <div class="crop-handle sw" data-handle="sw"></div>
+                            <div class="crop-handle se" data-handle="se"></div>
+                            <div class="crop-handle n" data-handle="n"></div>
+                            <div class="crop-handle s" data-handle="s"></div>
+                            <div class="crop-handle e" data-handle="e"></div>
+                            <div class="crop-handle w" data-handle="w"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Panel - Adjustments -->
+            <aside class="right-panel">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-tab="basic">Basic</button>
+                    <button class="panel-tab" data-tab="tone">Tone</button>
+                    <button class="panel-tab" data-tab="color">Color</button>
+                    <button class="panel-tab" data-tab="effects">Effects</button>
+                    <button class="panel-tab" data-tab="export">Export</button>
+                </div>
+
+                <!-- Basic Tab -->
+                <div id="tab-basic" class="tab-content active">
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Light</h4>
+                        <div class="slider-row">
+                            <label>Exposure</label>
+                            <input type="range" id="exposure-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="exposure-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Contrast</label>
+                            <input type="range" id="contrast-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="contrast-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Highlights</label>
+                            <input type="range" id="highlights-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="highlights-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Shadows</label>
+                            <input type="range" id="shadows-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="shadows-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Whites</label>
+                            <input type="range" id="whites-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="whites-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Blacks</label>
+                            <input type="range" id="blacks-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="blacks-value">0</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Presence</h4>
+                        <div class="slider-row">
+                            <label>Clarity</label>
+                            <input type="range" id="clarity-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="clarity-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Dehaze</label>
+                            <input type="range" id="dehaze-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="dehaze-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Vibrance</label>
+                            <input type="range" id="vibrance-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="vibrance-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Saturation</label>
+                            <input type="range" id="saturation-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="saturation-value">0</span>
+                        </div>
+                    </div>
+                    <button id="reset-basic-btn" class="reset-btn">Reset Basic</button>
+                </div>
+
+                <!-- Tone Tab -->
+                <div id="tab-tone" class="tab-content">
+                    <div class="adjustment-group">
+                        <h4 class="group-title">White Balance</h4>
+                        <div class="slider-row">
+                            <label>Temperature</label>
+                            <input type="range" id="temperature-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="temperature-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Tint</label>
+                            <input type="range" id="tint-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="tint-value">0</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Tone Curve</h4>
+                        <div class="curve-container">
+                            <canvas id="curve-canvas" width="200" height="200"></canvas>
+                        </div>
+                        <div class="curve-presets">
+                            <button class="curve-preset" data-curve="linear">Linear</button>
+                            <button class="curve-preset" data-curve="contrast">Contrast</button>
+                            <button class="curve-preset" data-curve="fade">Fade</button>
+                        </div>
+                    </div>
+                    <button id="reset-tone-btn" class="reset-btn">Reset Tone</button>
+                </div>
+
+                <!-- Color Tab -->
+                <div id="tab-color" class="tab-content">
+                    <div class="adjustment-group">
+                        <h4 class="group-title">HSL / Color</h4>
+                        <div class="hsl-tabs">
+                            <button class="hsl-tab active" data-hsl="hue">Hue</button>
+                            <button class="hsl-tab" data-hsl="sat">Sat</button>
+                            <button class="hsl-tab" data-hsl="lum">Lum</button>
+                        </div>
+                        <div id="hsl-sliders" class="hsl-sliders">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Split Toning</h4>
+                        <div class="split-tone-row">
+                            <label>Highlights</label>
+                            <input type="color" id="split-highlights-color" value="#000000">
+                            <input type="range" id="split-highlights-amount" min="0" max="100" value="0">
+                        </div>
+                        <div class="split-tone-row">
+                            <label>Shadows</label>
+                            <input type="color" id="split-shadows-color" value="#000000">
+                            <input type="range" id="split-shadows-amount" min="0" max="100" value="0">
+                        </div>
+                        <div class="slider-row">
+                            <label>Balance</label>
+                            <input type="range" id="split-balance" min="-100" max="100" value="0">
+                            <span class="slider-value" id="split-balance-value">0</span>
+                        </div>
+                    </div>
+                    <button id="reset-color-btn" class="reset-btn">Reset Color</button>
+                </div>
+
+                <!-- Effects Tab -->
+                <div id="tab-effects" class="tab-content">
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Detail</h4>
+                        <div class="slider-row">
+                            <label>Sharpening</label>
+                            <input type="range" id="sharpening-slider" min="0" max="100" value="0">
+                            <span class="slider-value" id="sharpening-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Noise Reduction</label>
+                            <input type="range" id="noise-slider" min="0" max="100" value="0">
+                            <span class="slider-value" id="noise-value">0</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Effects</h4>
+                        <div class="slider-row">
+                            <label>Vignette</label>
+                            <input type="range" id="vignette-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="vignette-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Grain</label>
+                            <input type="range" id="grain-slider" min="0" max="100" value="0">
+                            <span class="slider-value" id="grain-value">0</span>
+                        </div>
+                        <div class="slider-row">
+                            <label>Fade</label>
+                            <input type="range" id="fade-slider" min="0" max="100" value="0">
+                            <span class="slider-value" id="fade-value">0</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Lens Corrections</h4>
+                        <div class="slider-row">
+                            <label>Distortion</label>
+                            <input type="range" id="distortion-slider" min="-100" max="100" value="0">
+                            <span class="slider-value" id="distortion-value">0</span>
+                        </div>
+                    </div>
+                    <button id="reset-effects-btn" class="reset-btn">Reset Effects</button>
+                </div>
+
+                <!-- Export Tab -->
+                <div id="tab-export" class="tab-content">
+                    <div class="adjustment-group">
+                        <h4 class="group-title">File Settings</h4>
+                        <div class="export-row">
+                            <label>Format</label>
+                            <select id="format-select">
+                                <option value="jpeg">JPEG</option>
+                                <option value="png">PNG</option>
+                                <option value="webp">WebP</option>
+                            </select>
+                        </div>
+                        <div class="slider-row" id="quality-row">
+                            <label>Quality</label>
+                            <input type="range" id="quality-slider" min="10" max="100" value="92">
+                            <span class="slider-value" id="quality-value">92%</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-group">
+                        <h4 class="group-title">Resize</h4>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="resize-toggle">
+                            <label for="resize-toggle">Resize on export</label>
+                        </div>
+                        <div id="resize-options" class="resize-options hidden">
+                            <div class="export-row">
+                                <label>Width</label>
+                                <input type="number" id="resize-width" min="1" max="10000" value="1920">
+                            </div>
+                            <div class="export-row">
+                                <label>Height</label>
+                                <input type="number" id="resize-height" min="1" max="10000" value="1080">
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="resize-lock" checked>
+                                <label for="resize-lock">Lock aspect ratio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="export-final-btn" class="export-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Export Image
+                    </button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Bar -->
+        <footer class="bottom-bar">
+            <div class="filmstrip" id="filmstrip">
+                <!-- Thumbnail history would go here -->
+            </div>
+        </footer>
+    </section>
+
+    <!-- Legacy monolithic version (backup) -->
+    <!-- <script src="app.js"></script> -->
+
+    <!-- Modular version -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

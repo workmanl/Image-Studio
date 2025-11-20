@@ -1,0 +1,6 @@
+# Development files
+TODO.md
+.DS_Store
+*.log
+node_modules/
+.claude/
