@@ -7,7 +7,7 @@ import { eventBus } from './core/EventBus.js';
 import { debounce } from './utils/debounce.js';
 import { MAX_FILE_SIZE, MIN_CROP_SIZE, PRESETS, HSL_COLORS, DEFAULT_ADJUSTMENTS } from './utils/constants.js';
 import { renderImage, exportImage as processExport } from './core/ImageProcessor.js';
-import { drawToneCurve } from './adjustments/ToneAdjustments.js';
+import { drawToneCurve, CURVE_PRESETS } from './adjustments/ToneAdjustments.js';
 
 (function() {
     'use strict';
@@ -192,6 +192,12 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
         document.getElementById('reset-tone-btn')?.addEventListener('click', resetTone);
         document.getElementById('reset-color-btn')?.addEventListener('click', resetColor);
         document.getElementById('reset-effects-btn')?.addEventListener('click', resetEffects);
+        document.getElementById('reset-crop-btn')?.addEventListener('click', resetCrop);
+
+        // Effect presets
+        document.querySelectorAll('.effect-preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyEffectPreset(btn.dataset.effect));
+        });
 
         // Export options
         el.formatSelect.addEventListener('change', updateQualityVisibility);
@@ -249,8 +255,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
             { id: 'noise', key: 'noise' },
             { id: 'vignette', key: 'vignette' },
             { id: 'grain', key: 'grain' },
-            { id: 'fade', key: 'fade' },
-            { id: 'distortion', key: 'distortion' }
+            { id: 'fade', key: 'fade' }
         ];
 
         sliders.forEach(({ id, key }) => {
@@ -349,14 +354,117 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
     }
 
     // Tone curve
+    let draggingCurvePoint = null;
+
     function setupToneCurve() {
-        drawToneCurve(el.curveCanvas, state.adjustments.curve);
+        drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
+
+        // Add interactivity
+        el.curveCanvas.addEventListener('mousedown', handleCurveMouseDown);
+        el.curveCanvas.addEventListener('mousemove', handleCurveMouseMove);
+        el.curveCanvas.addEventListener('mouseup', handleCurveMouseUp);
+        el.curveCanvas.addEventListener('dblclick', handleCurveDoubleClick);
     }
 
-    function applyCurvePreset(curve) {
-        state.adjustments.curve = curve;
-        drawToneCurve(el.curveCanvas, curve);
+    function handleCurveMouseDown(e) {
+        const rect = el.curveCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = 1 - (e.clientY - rect.top) / rect.height;
+
+        // Check if clicking on existing point
+        const points = state.adjustments.curvePoints;
+        for (let i = 0; i < points.length; i++) {
+            const dx = Math.abs(points[i].x - x);
+            const dy = Math.abs(points[i].y - y);
+            if (dx < 0.05 && dy < 0.05) {
+                draggingCurvePoint = i;
+                return;
+            }
+        }
+
+        // Add new point
+        const newPoint = { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
+
+        // Insert in sorted order
+        let inserted = false;
+        for (let i = 0; i < points.length; i++) {
+            if (x < points[i].x) {
+                points.splice(i, 0, newPoint);
+                draggingCurvePoint = i;
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted) {
+            points.push(newPoint);
+            draggingCurvePoint = points.length - 1;
+        }
+
+        drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
         scheduleRender();
+    }
+
+    function handleCurveMouseMove(e) {
+        if (draggingCurvePoint === null) return;
+
+        const rect = el.curveCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = 1 - (e.clientY - rect.top) / rect.height;
+
+        const points = state.adjustments.curvePoints;
+
+        // Don't allow moving first/last point horizontally
+        if (draggingCurvePoint === 0) {
+            points[draggingCurvePoint].y = Math.max(0, Math.min(1, y));
+        } else if (draggingCurvePoint === points.length - 1) {
+            points[draggingCurvePoint].y = Math.max(0, Math.min(1, y));
+        } else {
+            // Constrain x between neighbors
+            const minX = points[draggingCurvePoint - 1].x + 0.01;
+            const maxX = points[draggingCurvePoint + 1].x - 0.01;
+            points[draggingCurvePoint].x = Math.max(minX, Math.min(maxX, x));
+            points[draggingCurvePoint].y = Math.max(0, Math.min(1, y));
+        }
+
+        drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
+        scheduleRender();
+    }
+
+    function handleCurveMouseUp() {
+        if (draggingCurvePoint !== null) {
+            saveToHistory();
+        }
+        draggingCurvePoint = null;
+    }
+
+    function handleCurveDoubleClick(e) {
+        const rect = el.curveCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = 1 - (e.clientY - rect.top) / rect.height;
+
+        // Remove point if clicking on one (except endpoints)
+        const points = state.adjustments.curvePoints;
+        for (let i = 1; i < points.length - 1; i++) {
+            const dx = Math.abs(points[i].x - x);
+            const dy = Math.abs(points[i].y - y);
+            if (dx < 0.05 && dy < 0.05) {
+                points.splice(i, 1);
+                drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
+                scheduleRender();
+                saveToHistory();
+                return;
+            }
+        }
+    }
+
+    function applyCurvePreset(presetName) {
+        const preset = CURVE_PRESETS[presetName];
+        if (preset) {
+            state.adjustments.curvePoints = JSON.parse(JSON.stringify(preset));
+            drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
+            scheduleRender();
+            saveToHistory();
+        }
     }
 
     // File handling
@@ -443,7 +551,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
         });
     }
 
-    function setupCanvas() {
+    function setupCanvas(resetState = true) {
         const area = document.querySelector('.canvas-area');
         if (!area) return;
 
@@ -472,18 +580,20 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
             height: canvasHeight
         };
 
-        state.aspectRatio = null;
-        state.exportWidth = null;
-        state.exportHeight = null;
+        if (resetState) {
+            state.aspectRatio = null;
+            state.exportWidth = null;
+            state.exportHeight = null;
 
-        historyManager.clear();
+            historyManager.clear();
 
-        state.resetAdjustments();
-        historyManager.saveImmediate(state.getState());
+            state.resetAdjustments();
+            historyManager.saveImmediate(state.getState());
 
-        document.querySelectorAll('.preset-item').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.ratio-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.ratio-btn[data-ratio="free"]')?.classList.add('active');
+            document.querySelectorAll('.preset-item').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.ratio-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.ratio-btn[data-ratio="free"]')?.classList.add('active');
+        }
 
         updateInfo();
         updateZoomDisplay();
@@ -714,7 +824,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
             updateCropBoxUI();
             updateInfo();
             renderCanvas();
-            drawToneCurve(el.curveCanvas, state.adjustments.curve);
+            drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
             updateHistoryButtons();
         }
     }
@@ -727,7 +837,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
             updateCropBoxUI();
             updateInfo();
             renderCanvas();
-            drawToneCurve(el.curveCanvas, state.adjustments.curve);
+            drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
             updateHistoryButtons();
         }
     }
@@ -737,7 +847,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
             'exposure', 'contrast', 'highlights', 'shadows', 'whites', 'blacks',
             'clarity', 'dehaze', 'vibrance', 'saturation',
             'temperature', 'tint',
-            'sharpening', 'noise', 'vignette', 'grain', 'fade', 'distortion'
+            'sharpening', 'noise', 'vignette', 'grain', 'fade'
         ];
 
         sliders.forEach(key => {
@@ -760,7 +870,7 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
     // Transforms
     function rotate(degrees) {
         state.rotation = (state.rotation + degrees + 360) % 360;
-        setupCanvas();
+        setupCanvas(false); // Don't reset adjustments on rotation
         saveToHistory();
     }
 
@@ -839,9 +949,9 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
     function resetTone() {
         state.adjustments.temperature = 0;
         state.adjustments.tint = 0;
-        state.adjustments.curve = 'linear';
+        state.adjustments.curvePoints = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
         updateAllSliders();
-        drawToneCurve(el.curveCanvas, state.adjustments.curve);
+        drawToneCurve(el.curveCanvas, state.adjustments.curvePoints);
         scheduleRender();
         saveToHistory();
     }
@@ -864,7 +974,74 @@ import { drawToneCurve } from './adjustments/ToneAdjustments.js';
         state.adjustments.vignette = 0;
         state.adjustments.grain = 0;
         state.adjustments.fade = 0;
-        state.adjustments.distortion = 0;
+        updateAllSliders();
+        scheduleRender();
+        saveToHistory();
+        // Clear active preset
+        document.querySelectorAll('.effect-preset-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function resetCrop() {
+        state.cropBox = {
+            x: 0,
+            y: 0,
+            width: el.canvas.width,
+            height: el.canvas.height
+        };
+        state.aspectRatio = null;
+        state.exportWidth = null;
+        state.exportHeight = null;
+
+        document.querySelectorAll('.preset-item').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.ratio-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.ratio-btn[data-ratio="free"]')?.classList.add('active');
+
+        updateCropBoxUI();
+        updateInfo();
+        saveToHistory();
+    }
+
+    // Effect presets
+    function applyEffectPreset(preset) {
+        // Clear active state
+        document.querySelectorAll('.effect-preset-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-effect="${preset}"]`)?.classList.add('active');
+
+        // Apply preset adjustments
+        switch (preset) {
+            case 'vintage':
+                state.adjustments.fade = 25;
+                state.adjustments.grain = 15;
+                state.adjustments.vignette = 30;
+                state.adjustments.saturation = -20;
+                state.adjustments.temperature = 15;
+                break;
+            case 'bw':
+                state.adjustments.saturation = -100;
+                state.adjustments.contrast = 10;
+                state.adjustments.grain = 5;
+                break;
+            case 'cinema':
+                state.adjustments.contrast = 15;
+                state.adjustments.highlights = -20;
+                state.adjustments.shadows = 10;
+                state.adjustments.vignette = 25;
+                state.adjustments.temperature = -5;
+                break;
+            case 'matte':
+                state.adjustments.fade = 40;
+                state.adjustments.contrast = -10;
+                state.adjustments.blacks = 20;
+                break;
+            case 'dramatic':
+                state.adjustments.contrast = 30;
+                state.adjustments.clarity = 25;
+                state.adjustments.highlights = -30;
+                state.adjustments.shadows = 30;
+                state.adjustments.vignette = 40;
+                break;
+        }
+
         updateAllSliders();
         scheduleRender();
         saveToHistory();

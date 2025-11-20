@@ -176,6 +176,7 @@
                         <button class="ratio-btn" data-ratio="2:3">2:3</button>
                         <button class="ratio-btn" data-ratio="4:3">4:3</button>
                     </div>
+                    <button id="reset-crop-btn" class="reset-btn">Reset Crop</button>
                 </div>
                 <div class="panel-section">
                     <h3 class="panel-title">Info</h3>
@@ -380,11 +381,13 @@
                         </div>
                     </div>
                     <div class="adjustment-group">
-                        <h4 class="group-title">Lens Corrections</h4>
-                        <div class="slider-row">
-                            <label>Distortion</label>
-                            <input type="range" id="distortion-slider" min="-100" max="100" value="0">
-                            <span class="slider-value" id="distortion-value">0</span>
+                        <h4 class="group-title">Effect Presets</h4>
+                        <div class="effect-presets-grid">
+                            <button class="effect-preset-btn" data-effect="vintage">Vintage</button>
+                            <button class="effect-preset-btn" data-effect="bw">B&W</button>
+                            <button class="effect-preset-btn" data-effect="cinema">Cinema</button>
+                            <button class="effect-preset-btn" data-effect="matte">Matte</button>
+                            <button class="effect-preset-btn" data-effect="dramatic">Dramatic</button>
                         </div>
                     </div>
                     <button id="reset-effects-btn" class="reset-btn">Reset Effects</button>

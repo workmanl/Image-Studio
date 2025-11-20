@@ -92,9 +92,21 @@ class StateManager {
                adj.sharpening !== 0 ||
                adj.noise !== 0 ||
                adj.fade !== 0 ||
-               adj.curve !== 'linear' ||
+               this.hasCurveAdjustments() ||
                adj.splitHighlights.amount > 0 ||
                adj.splitShadows.amount > 0;
+    }
+
+    hasCurveAdjustments() {
+        const points = this.adjustments.curvePoints;
+        if (!points || points.length === 2) {
+            // Check if it's just the linear default
+            if (points[0].x === 0 && points[0].y === 0 &&
+                points[1].x === 1 && points[1].y === 1) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

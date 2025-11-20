@@ -628,6 +628,36 @@ body {
     color: var(--text-primary);
 }
 
+/* Effect Presets Grid */
+.effect-presets-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.effect-preset-btn {
+    padding: 8px 6px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.effect-preset-btn:hover {
+    background: var(--bg-medium);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
+.effect-preset-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
 /* Tone Curve */
 .curve-container {
     background: var(--bg-dark);

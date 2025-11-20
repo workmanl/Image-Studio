@@ -1,6 +1,6 @@
 // Core image processing and rendering
 import { applyBasicAdjustments } from '../adjustments/BasicAdjustments.js';
-import { applyTemperatureAndTint, applyCurve } from '../adjustments/ToneAdjustments.js';
+import { applyTemperatureAndTint, applyCurvePoints } from '../adjustments/ToneAdjustments.js';
 import { applyVibranceAndSaturation, applyFade } from '../adjustments/ColorAdjustments.js';
 import { applySharpening, applyNoiseReduction, applyVignette, applyGrain } from '../adjustments/EffectsAdjustments.js';
 
@@ -11,7 +11,7 @@ export function applyAllAdjustments(imageData, adjustments) {
     applyBasicAdjustments(data, adjustments);
     applyTemperatureAndTint(data, adjustments);
     applyVibranceAndSaturation(data, adjustments);
-    applyCurve(data, adjustments.curve);
+    applyCurvePoints(data, adjustments.curvePoints);
     applyFade(data, adjustments.fade);
 
     // Clamp values

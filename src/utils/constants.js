@@ -31,15 +31,14 @@ export const DEFAULT_ADJUSTMENTS = {
     // Tone - White Balance
     temperature: 0,
     tint: 0,
-    // Tone - Curve
-    curve: 'linear',
+    // Tone - Curve (array of {x, y} points from 0-1)
+    curvePoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
     // Effects
     sharpening: 0,
     noise: 0,
     vignette: 0,
     grain: 0,
     fade: 0,
-    distortion: 0,
     // Color - HSL
     hsl: {
         red: { hue: 0, sat: 0, lum: 0 },
